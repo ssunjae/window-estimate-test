@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>우리 집 창호 간편견적 | Prototype</title>
+<style>
+*{box-sizing:border-box}
+:root{--text:#171717;--muted:#6b7280;--line:#e5e7eb;--soft:#f6f7f8;--accent:#111827}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",Arial,sans-serif;background:#eef0f2;color:var(--text)}
+.app{width:min(100%,480px);min-height:100vh;margin:0 auto;background:#fff}
+.screen{display:none;min-height:100vh;padding:42px 24px 28px;flex-direction:column}
+.screen.active{display:flex}
+.eyebrow{font-size:12px;font-weight:800;letter-spacing:.12em;color:#737373;margin-bottom:18px}
+h1{font-size:36px;line-height:1.18;margin:0 0 18px;letter-spacing:-.04em}
+h2{font-size:27px;line-height:1.3;margin:8px 0 12px;letter-spacing:-.035em}
+h3{font-size:18px;margin:0 0 14px}
+.lead,.sub{color:var(--muted);line-height:1.65}
+.notice{padding:14px 16px;background:var(--soft);border-radius:12px;font-size:13px;line-height:1.5;margin:18px 0 24px}
+.primary,.ghost,.choices button{appearance:none;border:0;cursor:pointer;font:inherit}
+.primary{width:100%;padding:17px 18px;border-radius:12px;background:var(--accent);color:white;font-weight:800;font-size:16px;margin-top:24px}
+#intro .primary{margin-top:30px}
+.ghost{padding:12px 4px;background:transparent;color:var(--muted)}
+.wide{width:100%;margin-top:8px}
+.progress{height:5px;background:#eceff2;border-radius:999px;overflow:hidden;margin-bottom:18px}
+.progress span{display:block;height:100%;background:#111827}
+.step{font-size:12px;color:#9ca3af;font-weight:700}
+.choices{display:grid;gap:10px;margin-top:18px}
+.choices button{text-align:left;padding:17px 16px;border-radius:12px;background:white;border:1px solid var(--line);font-weight:700}
+.choices button:hover,.choices button.selected{border-color:#111827;background:#f8fafc}
+.nav{margin-top:14px}
+.checks{display:grid;gap:10px;margin:16px 0 12px}
+.checks label,.agree{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:15px;line-height:1.45;font-size:15px}
+.summary{color:var(--muted);font-size:14px;margin:6px 0 18px}
+.estimate-card{border-radius:18px;padding:22px;background:#111827;color:white;display:flex;flex-direction:column;gap:7px}
+.estimate-card span{font-size:14px;opacity:.75}
+.estimate-card strong{font-size:32px;letter-spacing:-.04em}
+.estimate-card small{opacity:.55;line-height:1.5}
+.diagnosis{margin:26px 0}
+.diagnosis-item{padding:15px 0;border-bottom:1px solid var(--line)}
+.diagnosis-item strong{display:block;margin-bottom:6px}
+.diagnosis-item p{margin:0;color:var(--muted);font-size:14px;line-height:1.55}
+form{display:grid;gap:16px;margin-top:18px}
+.field{font-weight:700;font-size:14px}
+input,select{width:100%;margin-top:8px;padding:15px 14px;border:1px solid var(--line);border-radius:10px;font:inherit;background:white}
+.agree{font-weight:400;font-size:13px}
+.agree input{width:auto;margin:2px 0 0}
+.complete-icon{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:#111827;color:white;font-size:28px;font-weight:800;margin-bottom:18px}
+@media (min-width:700px){
+  body{padding:24px 0}
+  .app{min-height:calc(100vh - 48px);border-radius:20px;overflow:hidden}
+  .screen{min-height:calc(100vh - 48px)}
+}
+</style>
+</head>
+<body>
+<main class="app">
+<section id="intro" class="screen active">
+  <div class="eyebrow">WINDOW ESTIMATE · PROTOTYPE</div>
+  <h1>우리 집 창호,<br>전부 바꿔야 할까요?</h1>
+  <p class="lead">몇 가지 질문에 답하면 예상 교체비용과 확인할 포인트를 보여드립니다.</p>
+  <div class="notice">※ 연습용 프로토타입입니다. 표시 금액은 실제 견적이 아닙니다.</div>
+  <button class="primary" onclick="show('q1')">30초 간편견적 시작</button>
+</section>
+
+<section id="q1" class="screen">
+  <div class="progress"><span style="width:20%"></span></div><div class="step">1 / 5</div>
+  <h2>우리 집은 몇 평인가요?</h2><p class="sub">정확하지 않아도 괜찮습니다.</p>
+  <div class="choices" data-key="size">
+    <button onclick="choose('size','under20','q2',this)">20평 미만</button>
+    <button onclick="choose('size','20s','q2',this)">20평대</button>
+    <button onclick="choose('size','30s','q2',this)">30평대</button>
+    <button onclick="choose('size','40s','q2',this)">40평대</button>
+    <button onclick="choose('size','50plus','q2',this)">50평 이상</button>
+  </div>
+  <div class="nav"><button class="ghost" onclick="show('intro')">이전</button></div>
+</section>
+
+<section id="q2" class="screen">
+  <div class="progress"><span style="width:40%"></span></div><div class="step">2 / 5</div>
+  <h2>어느 정도 교체하고 싶으신가요?</h2>
+  <div class="choices" data-key="scope">
+    <button onclick="choose('scope','living','q3',this)">거실만</button>
+    <button onclick="choose('scope','living_room','q3',this)">거실 + 주요 방</button>
+    <button onclick="choose('scope','outside_all','q3',this)">외창 전체</button>
+    <button onclick="choose('scope','all','q3',this)">집 전체</button>
+    <button onclick="choose('scope','unknown','q3',this)">아직 잘 모르겠어요</button>
+  </div>
+  <div class="nav"><button class="ghost" onclick="show('q1')">이전</button></div>
+</section>
+
+<section id="q3" class="screen">
+  <div class="progress"><span style="width:60%"></span></div><div class="step">3 / 5</div>
+  <h2>거실이나 방이 확장되어 있나요?</h2>
+  <div class="choices" data-key="expand">
+    <button onclick="choose('expand','none','q4',this)">비확장</button>
+    <button onclick="choose('expand','partial','q4',this)">일부 확장</button>
+    <button onclick="choose('expand','major','q4',this)">거실 등 주요 공간 확장</button>
+    <button onclick="choose('expand','unknown','q4',this)">잘 모르겠어요</button>
+  </div>
+  <div class="nav"><button class="ghost" onclick="show('q2')">이전</button></div>
+</section>
+
+<section id="q4" class="screen">
+  <div class="progress"><span style="width:80%"></span></div><div class="step">4 / 5</div>
+  <h2>우리 집은 창이 많은 편인가요?</h2><p class="sub">모르겠다면 ‘보통’을 선택해도 됩니다.</p>
+  <div class="choices" data-key="windows">
+    <button onclick="choose('windows','few','q5',this)">적은 편</button>
+    <button onclick="choose('windows','normal','q5',this)">보통</button>
+    <button onclick="choose('windows','many','q5',this)">많은 편</button>
+  </div>
+  <div class="nav"><button class="ghost" onclick="show('q3')">이전</button></div>
+</section>
+
+<section id="q5" class="screen">
+  <div class="progress"><span style="width:100%"></span></div><div class="step">5 / 5</div>
+  <h2>현재 가장 불편한 점은 무엇인가요?</h2><p class="sub">복수 선택 가능합니다.</p>
+  <div class="checks">
+    <label><input type="checkbox" value="draft"> 겨울철 외풍이 심해요</label>
+    <label><input type="checkbox" value="condensation"> 결로가 자주 생겨요</label>
+    <label><input type="checkbox" value="noise"> 바깥 소음이 신경 쓰여요</label>
+    <label><input type="checkbox" value="operation"> 창문이 잘 열리지 않아요</label>
+    <label><input type="checkbox" value="old"> 창호가 오래됐어요</label>
+    <label><input type="checkbox" value="interior"> 인테리어와 함께 교체하고 싶어요</label>
+  </div>
+  <button class="primary" onclick="showResult()">결과 확인하기</button>
+  <div class="nav"><button class="ghost" onclick="show('q4')">이전</button></div>
+</section>
+
+<section id="result" class="screen">
+  <div class="eyebrow">MY WINDOW CHECK</div>
+  <h2>우리 집 창호 간편진단 결과</h2>
+  <div id="summary" class="summary"></div>
+  <div class="estimate-card">
+    <span>예상 시공비</span>
+    <strong id="estimate">-</strong>
+    <small>※ 연습용 가정값입니다. 실제 견적과 무관합니다.</small>
+  </div>
+  <div class="diagnosis"><h3>이런 부분을 중점적으로 확인해보세요.</h3><div id="diagnosis"></div></div>
+  <button class="primary" onclick="show('contact')">정확한 견적 상담받기</button>
+  <button class="ghost wide" onclick="resetAll()">처음부터 다시 하기</button>
+</section>
+
+<section id="contact" class="screen">
+  <div class="eyebrow">CONTACT</div>
+  <h2>상세 상담을 신청해보세요.</h2>
+  <p class="sub">이 프로토타입에서는 입력정보를 저장하지 않습니다.</p>
+  <form onsubmit="submitContact(event)">
+    <label class="field">이름<input type="text" placeholder="홍길동" required></label>
+    <label class="field">휴대전화<input type="tel" placeholder="010-0000-0000" required></label>
+    <label class="field">지역<select required><option value="">선택해주세요</option><option>서울</option><option>경기</option><option>인천</option><option>기타</option></select></label>
+    <label class="agree"><input type="checkbox" required> [연습용] 개인정보 수집·이용 안내를 확인했습니다.</label>
+    <button class="primary" type="submit">상담 신청 테스트</button>
+  </form>
+  <div class="nav"><button class="ghost" onclick="show('result')">이전</button></div>
+</section>
+
+<section id="complete" class="screen">
+  <div class="complete-icon">✓</div>
+  <h2>테스트 신청이 완료되었습니다.</h2>
+  <p class="lead">실제 개인정보는 저장되지 않았습니다.</p>
+  <button class="primary" onclick="resetAll()">처음으로</button>
+</section>
+</main>
+
+<script>
+const state={size:null,scope:null,expand:null,windows:null,concerns:[]};
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function choose(key,value,next,btn){
+  state[key]=value;
+  const group=btn.parentElement;
+  group.querySelectorAll('button').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  setTimeout(()=>show(next),100);
+}
+
+const base={
+  under20:{living:280,living_room:480,outside_all:720,all:980,unknown:720},
+  "20s":{living:330,living_room:570,outside_all:850,all:1150,unknown:850},
+  "30s":{living:390,living_room:680,outside_all:1020,all:1380,unknown:1020},
+  "40s":{living:460,living_room:790,outside_all:1190,all:1600,unknown:1190},
+  "50plus":{living:540,living_room:930,outside_all:1390,all:1880,unknown:1390}
+};
+const expandFactor={none:1,partial:1.08,major:1.15,unknown:1.08};
+const windowFactor={few:.92,normal:1,many:1.12};
+const label={
+  size:{under20:'20평 미만',"20s":'20평대',"30s":'30평대',"40s":'40평대',"50plus":'50평 이상'},
+  scope:{living:'거실만',living_room:'거실 + 주요 방',outside_all:'외창 전체',all:'집 전체',unknown:'교체범위 미정'},
+  expand:{none:'비확장',partial:'일부 확장',major:'주요 공간 확장',unknown:'확장 여부 미정'},
+  windows:{few:'창 적음',normal:'창 보통',many:'창 많음'}
+};
+const diagnosisCopy={
+  draft:['외풍','외부와 맞닿은 창을 중심으로 단열 성능과 창호 상태를 확인해보세요.'],
+  condensation:['결로','결로는 창호뿐 아니라 실내외 온·습도와 현장 조건의 영향도 있으므로 현장 확인이 필요합니다.'],
+  noise:['소음','도로 등 외부 소음이 큰 공간은 창호와 함께 유리 사양도 확인하는 것이 좋습니다.'],
+  operation:['사용 불편','개폐가 어렵다면 하드웨어와 창틀 상태를 함께 점검해보세요.'],
+  old:['노후','사용연수와 변형·기밀 상태를 확인해 부분 교체와 전체 교체를 비교해보세요.'],
+  interior:['인테리어','인테리어 일정과 함께 진행한다면 철거·마감 및 전체 공정 순서를 먼저 확인하는 것이 좋습니다.']
+};
+
+function showResult(){
+  state.concerns=[...document.querySelectorAll('.checks input:checked')].map(i=>i.value);
+  const mid=base[state.size][state.scope]*expandFactor[state.expand]*windowFactor[state.windows];
+  const low=Math.round((mid*.88)/10)*10;
+  const high=Math.round((mid*1.12)/10)*10;
+  document.getElementById('estimate').textContent=`약 ${low.toLocaleString()} ~ ${high.toLocaleString()}만원`;
+  document.getElementById('summary').textContent=
+    `${label.size[state.size]} · ${label.scope[state.scope]} · ${label.expand[state.expand]} · ${label.windows[state.windows]}`;
+  const box=document.getElementById('diagnosis');
+  box.innerHTML='';
+  const concerns=state.concerns.length?state.concerns:['old'];
+  concerns.forEach(c=>{
+    const [title,text]=diagnosisCopy[c];
+    const div=document.createElement('div');
+    div.className='diagnosis-item';
+    div.innerHTML=`<strong>${title} 확인</strong><p>${text}</p>`;
+    box.appendChild(div);
+  });
+  show('result');
+}
+
+function submitContact(e){
+  e.preventDefault();
+  e.target.reset();
+  show('complete');
+}
+
+function resetAll(){
+  state.size=state.scope=state.expand=state.windows=null;
+  state.concerns=[];
+  document.querySelectorAll('.selected').forEach(el=>el.classList.remove('selected'));
+  document.querySelectorAll('input[type=checkbox]').forEach(el=>el.checked=false);
+  show('intro');
+}
+</script>
+</body>
+</html>
